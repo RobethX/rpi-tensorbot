@@ -7,7 +7,7 @@
 import time
 import os
 import sys
-import threading
+from multiprocessing import Process, Pool, Manager, Value
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -22,6 +22,7 @@ from gpiozero import Motor, LED, PingServer, DistanceSensor
 #from mpu6050 import mpu6050 #apt install python3-smbus
 
 #logging
+logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
 #TODO
 
 #learning hyperparameters
@@ -68,6 +69,8 @@ class Robot: #agent
         self.acceleration = Vector3()
         self.rotation = Vector3() #x = roll, y = pitch, z = yaw
 
+        self.isRunning = False
+
         self.Q = tf.zeros((3,3))
 
         #self.accelerometer = positionSensor.get_accel_data()
@@ -79,6 +82,8 @@ class Robot: #agent
         #reset motors
         #warn if pitch or roll too far extreme (upside down?)
         self.calibrate()
+        #homing system with auxilary motion (wheels)?
+        #rotate 180 degrees before starting again?
         return True
 
     def calibrate(self):
@@ -91,15 +96,28 @@ class Robot: #agent
         return True
 
     def start(self, episodes = 1):
-        logging.info("Starting... Will run " + episodes + " times")
+        if (self.isRunning == True): #warn if already running
+            logging.warn("Episode already running!")
+            return False
+
+        logging.info("Starting... Will run " + episodes + " time(s)")
+        self.isRunning = True
+        for i in range(1, episodes):
+            self.reset() #move back to original position?
         return True
 
     def stop(self):
+        if (self.isRunning == False): #warn if not running
+            logging.warn("Tried to stop but nothing is running!")
+            return False
+
         logging.info("Stopping gracefully...")
+        self.isRunning = False
         return True
 
     def kill(self): #force stop
         logging.info("Stopping forcefully...")
+        self.isRunning = False
         return True
 
     def setAlpha(self, t = 0.0):
@@ -113,76 +131,59 @@ class Robot: #agent
             for ii in range(1, len(self.legs[i].joints)):
                 Qs.append(tf.matmul(Qs[ii-1], self.legs[i].joints[ii].Q))
 
-r = Robot()
-#r.timeflow()
-
 def discount(r, gamma, normal):
-    discount = 0; #placeholder
+    discount = 0 #placeholder
     return discount
 
-#control panel website
-app = Flask(__name__)
-app.debug = True
-app.config['SECRET_KEY'] = b'secret'
-
-@app.route("/")
-def webIndex():
-    return render_template('index.html', title='Control Panel')
-
-@app.route("/reset", methods=['GET', 'POST'])
-def webReset():
-    r.reset()
-    return ('', 204)
-
-@app.route("/calibrate", methods=['GET', 'POST'])
-def webCalibrate():
-    r.calibrate()
-    return ('', 204)
-
-@app.route("/start", methods=['GET', 'POST'])
-def webStart():
-    r.start(request.form['episodes'])
-    return ('', 204)
-
-@app.route("/stop", methods=['GET', 'POST'])
-def webStop():
-    r.stop()
-    return ('', 204)
-
-@app.route("/kill", methods=['GET', 'POST'])
-def webKill():
-    r.kill()
-    return ('', 204)
-
-#Deep Q Network off-policy learning
-class DeepQNetwork:
-    def __init__(self, actions, features, learningRate, rewardDecay, eGreedy, replaceTargetIterator = 300, memorySize = 500, batchSize = 32, eGreedyIncriment = None, outputGraph = False):
-        self.actions = actions
-        self.features = features
-        self.alpha = learningRate
-        self.gamma = rewardDecay
-        self.epsilonMax = eGreedy
-        self.replaceTargetIterator = replaceTargetIterator
-        self.memorySize = memorySize
-        self.batchSize = batchSize
-        self.epsilonIncriment = eGreedyIncriment
-        self.epsilon = 0 if eGreedyIncriment is not None else self.epsilonMax
-
-        self.learnStepCounter = 0
-
-        self.memory = np.zeros((self.memorySize, features * 2 + 2))
-
-#initialize tf session
-sess = tf.Session()
-init = tf.global_variables_initializer()
-
-globalStep = tf.train.get_or_create_global_step()
-summaryWriter = tf.contrib.summary.create_file_writer('./logs', flush_millis=10000)
-
-#sess.run(init)
-
 if __name__ == "__main__":
-#    with summaryWriter.as_default(), tf.contrib.summary.always_record_summaries():
+    pool = Pool() #how many processes?
+    
+    r = Robot()
+    #r.timeflow()
+
+    #control panel website
+    app = Flask(__name__)
+    app.debug = True
+    app.config['SECRET_KEY'] = b'secret'
+
+    @app.route("/")
+    def webIndex():
+        return render_template('index.html', title='Control Panel')
+
+    @app.route("/reset", methods=['GET', 'POST'])
+    def webReset():
+        pool.apply_async(r.reset())
+        return ('', 204)
+
+    @app.route("/calibrate", methods=['GET', 'POST'])
+    def webCalibrate():
+        pool.apply_async(r.calibrate())
+        return ('', 204)
+
+    @app.route("/start", methods=['GET', 'POST'])
+    def webStart():
+        pool.apply_async(r.start(request.form['episodes']))
+        return ('', 204)
+
+    @app.route("/stop", methods=['GET', 'POST'])
+    def webStop():
+        pool.apply_async(r.stop())
+        return ('', 204)
+
+    @app.route("/kill", methods=['GET', 'POST'])
+    def webKill():
+        pool.apply_async(r.kill())
+        return ('', 204)
+
+    #initialize tf session
+    sess = tf.Session()
+    init = tf.global_variables_initializer()
+
+    globalStep = tf.train.get_or_create_global_step()
+    summaryWriter = tf.contrib.summary.create_file_writer('./logs', flush_millis=10000)
+
+
+    #with Manager() as manager, summaryWriter.as_default(), tf.contrib.summary.always_record_summaries():
 #        tf.contrib.summary.scalar("loss", loss)
 #        train_op = ....
 

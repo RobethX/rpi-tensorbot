@@ -1,0 +1,44 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+head {
+	width: 0%;
+	height: 0%;
+}
+
+body {
+    font-family: "helvetica";
+    font-size: 100%; 
+    text-decoration: none;
+    color: #F2F1EF;
+	background-color: #264348;
+    position: absolute;
+    /* height: 100%; */
+	/* width: 100%; */
+}
+
+.button {
+    background-color: #5D8CAE;
+    border: none;
+    color: #F2F1EF;
+    padding: 4px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.form {
+	color: #264348;
+	background-color: #F2F1EF;
+}
+
+.main {
+	display: inline-block;
+	white-space: nowrap;
+	margin: 2em;
+}

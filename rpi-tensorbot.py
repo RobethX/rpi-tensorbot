@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras import backend
+from keras.models import Model
 #from keras.
 
 tf.enable_eager_execution() #immediate mode for tf
@@ -84,7 +85,7 @@ class Robot: #agent
         #self.gyroscope = positionSensor.get_gyro_data()
 
     def isReady(self): #TODO
-        return true #if upright, etc.
+        return True #TODO if upright, etc.
 
     def reset(self):
         logging.info("Resetting...")

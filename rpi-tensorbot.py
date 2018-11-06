@@ -8,10 +8,12 @@ import time
 import os
 import sys
 from multiprocessing import Process, Pool, Manager, Value
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import logging
+from keras import backend
+#from keras.
 
 tf.enable_eager_execution() #immediate mode for tf
 
@@ -27,8 +29,10 @@ logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadNa
 
 #learning hyperparameters
 alpha = 0.01 #learning rate
-gamma = 0.9 #discount factor - future reward rate
-epsilonMax = 0.9 #e-greedy
+gamma = 0.95 #discount factor - future reward rate
+epsilonMax = 0.95 #e-greedy
+epsilonMin = 0.0001
+episodeDuration = 60 #seconds
 
 #A Vector3 class for Python
 class Vector3:
@@ -72,9 +76,15 @@ class Robot: #agent
         self.isRunning = False
 
         self.Q = tf.zeros((3,3))
+        self.epsilon = epsilonMax
+        self.model = None
+        self.modelTarget = None
 
         #self.accelerometer = positionSensor.get_accel_data()
         #self.gyroscope = positionSensor.get_gyro_data()
+
+    def isReady(self): #TODO
+        return true #if upright, etc.
 
     def reset(self):
         logging.info("Resetting...")
@@ -103,7 +113,19 @@ class Robot: #agent
         logging.info("Starting... Will run " + episodes + " time(s)")
         self.isRunning = True
         for i in range(1, episodes):
+
+            time.sleep(4) #rest for a few seconds before resetting
             self.reset() #move back to original position?
+            time.sleep(1) #rest for a second before starting
+
+            timeEpisodeStarted = time.time()
+            while (time.time() - timeEpisodeStarted < episodeDuration):
+                n = 10 #TODO figure out what n should be
+                a = np.argmax(Q[s,:] + np.random.randn(1, n) * (1. / (i + 1))) #choose action greedily
+
+            logging.info("Finished episode " + i + " with a success rate of ") #TODO print out success
+            i += 1 #add one to i before starting loop over
+
         return True
 
     def stop(self):
@@ -178,6 +200,7 @@ if __name__ == "__main__":
     #initialize tf session
     sess = tf.Session()
     init = tf.global_variables_initializer()
+    backend.set_session(sess) #Keras
 
     globalStep = tf.train.get_or_create_global_step()
     summaryWriter = tf.contrib.summary.create_file_writer('./logs', flush_millis=10000)

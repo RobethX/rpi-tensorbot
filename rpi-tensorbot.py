@@ -122,7 +122,7 @@ class Robot: #agent
             timeEpisodeStarted = time.time()
             while (time.time() - timeEpisodeStarted < episodeDuration):
                 n = 10 #TODO figure out what n should be
-                a = np.argmax(Q[s,:] + np.random.randn(1, n) * (1. / (i + 1))) #choose action greedily
+                #a = np.argmax(Q[s,:] + np.random.randn(1, n) * (1. / (i + 1))) #choose action greedily TODO
 
             logging.info("Finished episode " + i + " with a success rate of ") #TODO print out success
             i += 1 #add one to i before starting loop over

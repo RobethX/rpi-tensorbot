@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{{ title }}</title>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	</head>
+
+	<body class="noselect">
+		<form method="post" action="/reset">
+			<p id="reset">
+			<button type=submit value=Reset>Reset</button>
+			</p>
+		</form>
+		<form method="post" action="/calibrate">
+			<p id="calibrate">
+			<button type=submit value=Calibrate>Calibrate</button>
+			</p>
+		</form>
+		<form method="post" action="/start">
+            <p id="start">
+			Episodes: 
+			<input type=number name=episodes min=0 step=1 value=1 style='width:5em'>
+            <input type=submit value=Start>
+			</p>
+        </form>
+		<form method="post" action="/stop">
+			<p id="stop">
+			<button type=submit value=Stop>Stop</button>
+			</p>
+		</form>
+		<form method="post" action="/kill">
+			<p id="kill">
+			<button type=submit value=Kill>Force Stop</button>
+			</p>
+		</form>
+	</body>
+
+</html>

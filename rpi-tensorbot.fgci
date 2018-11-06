@@ -1,0 +1,4 @@
+from flup.server.fcgi import WSGIServer
+from rpi-tensorbot import app
+
+WSGIServer(app, bindAddress="/tmp/rpi-tensorbot-fcgi.sock)

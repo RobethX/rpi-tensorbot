@@ -115,3 +115,6 @@ ipch/
 
 # No idea but it's causing problems
 /.vs
+
+# Logs
+[Ll]ogs

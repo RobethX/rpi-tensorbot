@@ -244,10 +244,14 @@ if __name__ == "__main__":
     def drawDisplay():
         imageFont = ImageFont.truetype(os.path.abspath(os.path.join(os.path.dirname(__file__), "font.ttf")))
 
-        with render.canvas(getDevice()) as draw:
+        device = getDevice()
+        with render.canvas(device) as draw:
             while True: #where should this be?
-                draw.text((0, 0), getIP() + " Running: " + r.isRunning, font=imageFont, fill="white")
-                draw.text((0, 14), getMemoryUsage() + " " + getProcessorUsage(), font=imageFont, fill="white")
+                draw.text((0, 14), "Running: " + r.isRunning, font=imageFont, fill="white")
+                draw.text((0, 0), getIP(), font=imageFont, fill="white")
+                if (device.height >= 64):
+                    draw.text((0, 26), getMemoryUsage(), font=imageFont, fill="white")
+                    draw.text((0, 38), getProcessorUsage(), font=imageFont, fill="white")
                 time.sleep(5)
 
     #initialize tf session

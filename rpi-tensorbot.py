@@ -1,3 +1,5 @@
+#TODO divide the program into multiple files for readability
+
 # import modules
 #try:
 #    import RPi.GPIO as GPIO
@@ -16,7 +18,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras import backend
 from keras.models import Model
-#from keras.
 
 tf.enable_eager_execution() #immediate mode for tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = "3"
@@ -25,10 +26,11 @@ from flask import Flask, render_template, request, Response, send_file
 
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
 from gpiozero import Motor, LED, PingServer, DistanceSensor
+#import smbus2 #confgure i2c devices
 #from mpu6050 import mpu6050 #apt install python3-smbus
 from luma.core import render, cmdline, error
 import serial
-#TODO use arduino instead of only raspi's GPIO pins
+#TODO use arduino instead of only raspi's GPIO pins (maybe)
 
 from PIL import Image, ImageFont
 

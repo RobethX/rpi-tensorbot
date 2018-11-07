@@ -7,6 +7,8 @@
 import time
 import os
 import sys
+import psutil
+import socket
 from multiprocessing import Process, Pool, Manager, Value
 import logging
 import numpy as np
@@ -23,6 +25,9 @@ from flask import Flask, render_template, request, Response, send_file
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
 from gpiozero import Motor, LED, PingServer, DistanceSensor
 #from mpu6050 import mpu6050 #apt install python3-smbus
+from luma.core import render, cmdline, error
+
+from PIL import Image, ImageFont
 
 #logging
 logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
@@ -158,6 +163,7 @@ def discount(r, gamma, normal):
     discount = 0 #placeholder
     return discount
 
+#Main
 if __name__ == "__main__":
     pool = Pool() #how many processes?
     
@@ -198,6 +204,49 @@ if __name__ == "__main__":
         pool.apply_async(r.kill())
         return ('', 204)
 
+    #OLED display
+    def getIP(): #should I use psutil instead of socket?
+        return "IP: " + socket.gethostbyname(socket.gethostname())
+
+    def getMemoryUsage():
+        return "Mem: %.1f%%" %psutil.virtual_memory().percent
+
+    def getProcessorUsage():
+        return "CPU: %.1f%%, %d MHz" % (psutil.cpu_percent(), psutil.cpu_freq().current)
+
+    def getDevice():
+        parser = cmdline.create_parser(description="luma args")
+        args = parser.parse_args(sys.argv[1:])
+
+        if args.config: # load config from file
+            config = cmdline.load_config(args.config)
+            args = parser.parse_args(config + args)
+
+            #display_types = cmdline.get_display_types()
+    
+            #lib_name = cmdline.get_library_for_display_type(args.display)
+            #if lib_name is not None:
+            #lib_version = cmdline.get_library_version(lib_name)
+        #else:
+            #lib_name = lib_version = "unknown"
+
+        try:
+            device = cmdline.create_device(args)
+        except error.Error as e:
+            parser.error(e)
+            logging.error("Could not setup display!")
+    
+        return device
+
+    def drawDisplay():
+        imageFont = ImageFont.truetype(os.path.abspath(os.path.join(os.path.dirname(__file__), "font.ttf")))
+
+        with render.canvas(getDevice()) as draw:
+            while True: #where should this be?
+                draw.text((0, 0), getIP() + " Running: " + r.isRunning, font=imageFont, fill="white")
+                draw.text((0, 14), getMemoryUsage() + " " + getProcessorUsage(), font=imageFont, fill="white")
+                time.sleep(5)
+
     #initialize tf session
     sess = tf.Session()
     init = tf.global_variables_initializer()
@@ -206,11 +255,11 @@ if __name__ == "__main__":
     globalStep = tf.train.get_or_create_global_step()
     summaryWriter = tf.contrib.summary.create_file_writer('./logs', flush_millis=10000)
 
-
     #with Manager() as manager, summaryWriter.as_default(), tf.contrib.summary.always_record_summaries():
 #        tf.contrib.summary.scalar("loss", loss)
 #        train_op = ....
 
+    #pool.apply_async(drawDisplay()) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn
 

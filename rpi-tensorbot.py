@@ -19,6 +19,7 @@ from keras.models import Model
 #from keras.
 
 tf.enable_eager_execution() #immediate mode for tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = "3"
 
 from flask import Flask, render_template, request, Response, send_file
 
@@ -26,6 +27,8 @@ os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'moc
 from gpiozero import Motor, LED, PingServer, DistanceSensor
 #from mpu6050 import mpu6050 #apt install python3-smbus
 from luma.core import render, cmdline, error
+import serial
+#TODO use arduino instead of only raspi's GPIO pins
 
 from PIL import Image, ImageFont
 
@@ -116,7 +119,7 @@ class Robot: #agent
             logging.warn("Episode already running!")
             return False
 
-        logging.info("Starting... Will run " + episodes + " time(s)")
+        logging.info("Starting... Will run " + int(episodes) + " time(s)")
         self.isRunning = True
         for i in range(1, episodes):
 

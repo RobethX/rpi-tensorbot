@@ -177,13 +177,13 @@ class Robot: #agent
             logging.warn("Episode already running!")
             return False
 
-        runner.run(
-            timesteps=6000000, #TODO set timesteps
-            episodes=episodes,
-            max_episode_timesteps=10000,
-            deterministic=False,
-            episode_finished=self.episodeFinished
-        )
+        #runner.run(
+        #    timesteps=6000000, #TODO set timesteps
+        #    episodes=episodes,
+        #    max_episode_timesteps=10000,
+        #    deterministic=False,
+        #    episode_finished=self.episodeFinished
+        #)
 
         return True
 
@@ -287,13 +287,13 @@ if __name__ == "__main__":
         device = getDevice()
         with render.canvas(device) as draw:
             while True: #where should this be?
-                draw.text((0, 14), "Running: " + r.isRunning, font=imageFont, fill="white")
+                draw.text((0, 14), "Running: " + str(r.isRunning), font=imageFont, fill="white")
                 draw.text((0, 0), getIP(), font=imageFont, fill="white")
                 if (device.height >= 64):
                     draw.text((0, 26), getMemoryUsage(), font=imageFont, fill="white")
                     draw.text((0, 38), getProcessorUsage(), font=imageFont, fill="white")
                 time.sleep(5)
 
-    #pool.apply_async(drawDisplay()) #TODO DOES NOT WORK ON WINDOWS!
+    pool.apply_async(drawDisplay()) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn

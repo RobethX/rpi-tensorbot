@@ -62,10 +62,9 @@ numLegs = 4
 numJointsPerLeg = 2
 
 class Joint:
-    def __init__(self, a, b, m = 0.0, Q=tf.zeros((3,3))):
-        self.m = m
+    def __init__(self, pin1, pin2, Q=tf.zeros((3,3))):
         self.Q = Q
-        #self.motor = Motor(a, b)
+        #self.motor = Motor(pin1, pin2)
 
 class Leg:
     def __init__(self):
@@ -156,13 +155,15 @@ class Robot: #agent
     def setAlpha(self, t = 0.0):
         logging.info("setAlpha") #TODO
 
-    def timeflow(self, t = 0.0):
+    def timeflow(self, t = 0.0): #TODO why timeflow?
         self.setAlpha(t)
 
         for i in range(len(self.legs)):
             Qs = [tf.matmul(self.Q, self.legs[i].joints[0].Q)]
-            for ii in range(1, len(self.legs[i].joints)):
+            for ii in range(1, len(self.legs[i].joints)): #TODO why is the first set manually but all subsequent are appended with a for loop?
                 Qs.append(tf.matmul(Qs[ii-1], self.legs[i].joints[ii].Q))
+
+            
 
 def discount(r, gamma, normal):
     discount = 0 #placeholder
@@ -186,27 +187,32 @@ if __name__ == "__main__":
 
     @app.route("/reset", methods=['GET', 'POST'])
     def webReset():
-        pool.apply_async(r.reset())
+        #pool.apply_async(r.reset())
+        r.reset()
         return ('', 204)
 
     @app.route("/calibrate", methods=['GET', 'POST'])
     def webCalibrate():
-        pool.apply_async(r.calibrate())
+        #pool.apply_async(r.calibrate())
+        r.calibrate()
         return ('', 204)
 
     @app.route("/start", methods=['GET', 'POST'])
     def webStart():
-        pool.apply_async(r.start(request.form['episodes']))
+        #pool.apply_async(r.start(request.form['episodes']))
+        r.start(request.form['episodes'])
         return ('', 204)
 
     @app.route("/stop", methods=['GET', 'POST'])
     def webStop():
-        pool.apply_async(r.stop())
+        #pool.apply_async(r.stop())
+        r.stop()
         return ('', 204)
 
     @app.route("/kill", methods=['GET', 'POST'])
     def webKill():
-        pool.apply_async(r.kill())
+        #pool.apply_async(r.kill())
+        r.kill()
         return ('', 204)
 
     #OLED display

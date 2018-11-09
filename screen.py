@@ -1,23 +1,19 @@
-from luma.core import render, cmdline, error
+import Adafruit_GPIO.SPI as SPI
+import Adafruit_SSD1306
 import serial
 import psutil
 import socket
 import sys
 import os
-from PIL import Image, ImageFont
+from PIL import Image, ImageFont, ImageDraw
 import logging
 import time
 
-# logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)-15s - %(message)s'
-)
-# ignore PIL debug messages
-logging.getLogger('PIL').setLevel(logging.ERROR)
-
 def getIP(): #should I use psutil instead of socket?
     return "IP: " + socket.gethostbyname(socket.gethostname())
+
+def getStatus():
+    return "Status: " + str(True) #TODO #str(r.isRunning)
 
 def getMemoryUsage():
     return "Mem: %.1f%%" %psutil.virtual_memory().percent
@@ -25,60 +21,55 @@ def getMemoryUsage():
 def getProcessorUsage():
     return "CPU: %.1f%%, %d MHz" % (psutil.cpu_percent(), psutil.cpu_freq().current)
 
-def displaySettings(args): #Display a short summary of the settings.
-    iface = ''
-    display_types = cmdline.get_display_types()
-    if args.display not in display_types['emulator']:
-        iface = 'Interface: {}\n'.format(args.interface)
+# Raspberry Pi pin configuration:
+RST = None     # on the PiOLED this pin isnt used
+# Note the following are only used with SPI:
+DC = 23
+SPI_PORT = 0
+SPI_DEVICE = 0
 
-    lib_name = cmdline.get_library_for_display_type(args.display)
-    if lib_name is not None:
-        lib_version = cmdline.get_library_version(lib_name)
-    else:
-        lib_name = lib_version = 'unknown'
+disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST, i2c_address=0x3C) #128x32 display with set I2C address
 
-    import luma.core
-    version = 'luma.{} {} (luma.core {})'.format(
-        lib_name, lib_version, luma.core.__version__)
+# Initialize library.
+disp.begin()
 
-    return 'Version: {}\nDisplay: {}\n{}Dimensions: {} x {}\n{}'.format(
-        version, args.display, iface, args.width, args.height, '-' * 60)
+# Clear display.
+disp.clear()
+disp.display()
 
-def getDevice(actual_args=None): #Create device from command-line arguments and return it.
-    if actual_args is None:
-        actual_args = sys.argv[1:]
-    parser = cmdline.create_parser(description='luma.examples arguments')
-    args = parser.parse_args(actual_args)
+# Create blank image for drawing.
+# Make sure to create image with mode '1' for 1-bit color.
+width = disp.width
+height = disp.height
+image = Image.new('1', (width, height))
 
-    if args.config:
-        # load config from file
-        config = cmdline.load_config(args.config)
-        args = parser.parse_args(config + actual_args)
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
 
-    print(displaySettings(args))
+# Draw a black filled box to clear the image.
+draw.rectangle((0,0,width,height), outline=0, fill=0)
 
-    # create device
-    try:
-        device = cmdline.create_device(args)
-    except error.Error as e:
-        parser.error(e)
+# Draw some shapes.
+# First define some constants to allow easy resizing of shapes.
+padding = -2
+top = padding
+bottom = height-padding
+# Move left to right keeping track of the current x position for drawing shapes.
+x = 0
 
-    return device
+# Load default font.
+font = ImageFont.load_default()
+#font = ImageFont.truetype('font.ttf', 8)
 
-def draw():
+def update():
     if os.name == 'posix': #dont run on windows
-        imageFont = ImageFont.truetype(os.path.abspath(os.path.join(os.path.dirname(__file__), "font.ttf")))
-
-        device = getDevice()
-        with render.canvas(device) as draw:
-            while True: #where should this be?
-                draw.text((0, 0), getIP(), font=imageFont, fill="white")
-                if device.height >= 32:
-                    draw.text((0, 14), "Running: " + "PLACEHOLDER", font=imageFont, fill="white") #str(r.isRunning)
-                if (device.height >= 64):
-                    draw.text((0, 26), getMemoryUsage(), font=imageFont, fill="white")
-                    draw.text((0, 38), getProcessorUsage(), font=imageFont, fill="white")
-                time.sleep(5)
+        while True:
+            draw.rectangle((0,0,width,height), outline=0, fill=0) #clear screen
+            draw.text((x, top), getIP(), font=font, fill="white")
+            draw.text((x, top+8), getStatus(), font=font, fill="white") 
+            draw.text((x, top+16), getMemoryUsage(), font=font, fill="white")
+            draw.text((x, top+25), getProcessorUsage(), font=font, fill="white")
+            time.sleep(5)
 
 if __name__ == "__main__":
     try:

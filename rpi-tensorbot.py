@@ -248,6 +248,6 @@ if __name__ == "__main__":
         os.system("shutdown -h -t 10")
         return ('', 204)
 
-    pool.apply_async(screen.draw) #TODO DOES NOT WORK ON WINDOWS!
+    pool.apply_async(screen.update) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn

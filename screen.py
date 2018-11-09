@@ -73,6 +73,6 @@ def update():
 
 if __name__ == "__main__":
     try:
-        draw()
+        update()
     except KeyboardInterrupt:
         pass

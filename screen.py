@@ -9,6 +9,8 @@ from PIL import Image, ImageFont, ImageDraw
 import logging
 import time
 
+import subprocess #why?
+
 def getIP(): #should I use psutil instead of socket?
     return "IP: " + socket.gethostbyname(socket.gethostname())
 
@@ -65,11 +67,16 @@ def update():
     if os.name == 'posix': #dont run on windows
         while True:
             draw.rectangle((0,0,width,height), outline=0, fill=0) #clear screen
+            
             draw.text((x, top), getIP(), font=font, fill="white")
             draw.text((x, top+8), getStatus(), font=font, fill="white") 
             draw.text((x, top+16), getMemoryUsage(), font=font, fill="white")
             draw.text((x, top+25), getProcessorUsage(), font=font, fill="white")
-            time.sleep(5)
+
+            #display image
+            disp.image(image)
+            disp.display()
+            time.sleep(1)
 
 if __name__ == "__main__":
     try:

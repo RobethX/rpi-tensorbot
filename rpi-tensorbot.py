@@ -13,10 +13,12 @@ import psutil
 import socket
 from multiprocessing import Process, Pool, Manager, Value
 import logging
+import json
 import numpy as np
-from tensorforce.environments import Environment
+import tensorforce.environments
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
+import tensorforce.util
 from flask import Flask, render_template, request, Response, send_file
 
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
@@ -41,28 +43,59 @@ epsilonMin = 0.0001
 episodeDuration = 60 #seconds
 
 #Tensorforce setup
-class RealEnvironment(Environment):
-    raise NotImplementedError
+class Environment(tensorforce.environments.Environment):
+    def close(self):
+        #TODO
+        pass
 
-env = RealEnvironment()
+    def seed(self, seed):
+        #TODO
+        return None
 
-#TODO networkSpec
-networkSpec = None #placeholder
+    def reset(self):
+        logging.info("Not implemented") #TODO
+
+    def execute(self, action):
+        logging.info("Not implemented") #TODO
+
+    @property
+    def states(self):
+        logging.info("Not implemented") #TODO
+
+    @property
+    def actions(self):
+        logging.info("Not implemented") #TODO
+
+    @staticmethod
+    def from_spec(spec, kwargs):
+        env = tensorforce.util.get_object(
+            obj=spec,
+            #predefined_objects=tensorforce.environments.environments, #TODO
+            kwargs=kwargs
+        )
+        assert isinstance(env, Environment)
+        return env
+
+env = Environment()
+
+#load neural network config
+with open("network.json", "r") as f:
+    networkSpec = json.load(f)
 
 #load agent config
-with open("agent.json", 'r') as fp:
-    agentConfig = json.load(fp=fp)
+with open("agent.json", "r") as f:
+    agentConfig = json.load(f)
 
-agent = Agent.from_spec(
-    spec=agentConfig,
-    kwargs=dict(
-        states=environment.states,
-        actions=environment.actions,
-        network=networkSpec,
-    )
-)
+#agent = Agent.from_spec(
+#    spec=agentConfig,
+#    kwargs=dict(
+#        states=env.states,
+#        actions=env.actions,
+#        network=networkSpec
+#    )
+#)
 
-runner = Runner(agent=agent, environment=env)
+#runner = Runner(agent=agent, environment=env)
 
 #A Vector3 class for Python
 class Vector3:
@@ -81,8 +114,8 @@ numLegs = 4
 numJointsPerLeg = 2
 
 class Joint:
-    def __init__(self, pin1, pin2, Q=tf.zeros((3,3))):
-        self.Q = Q
+    def __init__(self, pin1, pin2):
+        logging.info("Not implemented") #TODO
         #self.motor = Motor(pin1, pin2)
 
 class Leg:

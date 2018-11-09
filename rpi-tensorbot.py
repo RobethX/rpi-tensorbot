@@ -9,8 +9,6 @@
 import time
 import os
 import sys
-import psutil
-import socket
 from multiprocessing import Process, Pool, Manager, Value
 import logging
 import json
@@ -25,11 +23,8 @@ os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'moc
 from gpiozero import Motor, LED, PingServer, DistanceSensor
 #import smbus2 #confgure i2c devices
 #from mpu6050 import mpu6050 #apt install python3-smbus
-from luma.core import render, cmdline, error
-import serial
 #TODO use arduino instead of only raspi's GPIO pins (maybe)
-
-from PIL import Image, ImageFont
+import screen
 
 #logging
 logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
@@ -247,53 +242,12 @@ if __name__ == "__main__":
         r.kill()
         return ('', 204)
 
-    #OLED display
-    def getIP(): #should I use psutil instead of socket?
-        return "IP: " + socket.gethostbyname(socket.gethostname())
+    @app.route("shutdown", )
+    def shutdown():
+        logging.info("Shutting down...")
+        os.system("shutdown -h -t 10")
+        return ('', 204)
 
-    def getMemoryUsage():
-        return "Mem: %.1f%%" %psutil.virtual_memory().percent
-
-    def getProcessorUsage():
-        return "CPU: %.1f%%, %d MHz" % (psutil.cpu_percent(), psutil.cpu_freq().current)
-
-    def getDevice():
-        parser = cmdline.create_parser(description="luma args")
-        args = parser.parse_args(sys.argv[1:])
-
-        if args.config: # load config from file
-            config = cmdline.load_config(args.config)
-            args = parser.parse_args(config + args)
-
-            #display_types = cmdline.get_display_types()
-    
-            #lib_name = cmdline.get_library_for_display_type(args.display)
-            #if lib_name is not None:
-            #lib_version = cmdline.get_library_version(lib_name)
-        #else:
-            #lib_name = lib_version = "unknown"
-
-        try:
-            device = cmdline.create_device(args)
-        except error.Error as e:
-            parser.error(e)
-            logging.error("Could not setup display!")
-    
-        return device
-
-    def drawDisplay():
-        imageFont = ImageFont.truetype(os.path.abspath(os.path.join(os.path.dirname(__file__), "font.ttf")))
-
-        device = getDevice()
-        with render.canvas(device) as draw:
-            while True: #where should this be?
-                draw.text((0, 14), "Running: " + str(r.isRunning), font=imageFont, fill="white")
-                draw.text((0, 0), getIP(), font=imageFont, fill="white")
-                if (device.height >= 64):
-                    draw.text((0, 26), getMemoryUsage(), font=imageFont, fill="white")
-                    draw.text((0, 38), getProcessorUsage(), font=imageFont, fill="white")
-                time.sleep(5)
-
-    pool.apply_async(drawDisplay()) #TODO DOES NOT WORK ON WINDOWS!
+    pool.apply_async(screen.draw) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn

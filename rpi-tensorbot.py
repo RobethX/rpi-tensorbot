@@ -14,14 +14,9 @@ import socket
 from multiprocessing import Process, Pool, Manager, Value
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from keras import backend
-from keras.models import Model
-
-tf.enable_eager_execution() #immediate mode for tf
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = "3"
-
+from tensorforce.environments import Environment
+from tensorforce.agents import Agent
+from tensorforce.execution import Runner
 from flask import Flask, render_template, request, Response, send_file
 
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
@@ -44,6 +39,30 @@ gamma = 0.95 #discount factor - future reward rate
 epsilonMax = 0.95 #e-greedy
 epsilonMin = 0.0001
 episodeDuration = 60 #seconds
+
+#Tensorforce setup
+class RealEnvironment(Environment):
+    raise NotImplementedError
+
+env = RealEnvironment()
+
+#TODO networkSpec
+networkSpec = None #placeholder
+
+#load agent config
+with open("agent.json", 'r') as fp:
+    agentConfig = json.load(fp=fp)
+
+agent = Agent.from_spec(
+    spec=agentConfig,
+    kwargs=dict(
+        states=environment.states,
+        actions=environment.actions,
+        network=networkSpec,
+    )
+)
+
+runner = Runner(agent=agent, environment=env)
 
 #A Vector3 class for Python
 class Vector3:
@@ -83,15 +102,20 @@ class Robot: #agent
         self.acceleration = Vector3()
         self.rotation = Vector3() #x = roll, y = pitch, z = yaw
 
-        self.isRunning = False
-
-        self.Q = tf.zeros((3,3))
-        self.epsilon = epsilonMax
-        self.model = None
-        self.modelTarget = None
-
         #self.accelerometer = positionSensor.get_accel_data()
         #self.gyroscope = positionSensor.get_gyro_data()
+
+        self.isRunning = False      
+    #TODO seperate agent and environment functions from robot, do them seperately
+    def episodeFinished(self, r):
+        if r.episode % 100 == 0:
+            sps = r.timestep / (time.time() - r.start_time)
+            logging.info("Finished episode {ep} after {ts} timesteps. Steps Per Second {sps}".format(ep=r.episode, ts=r.timestep, sps=sps))
+            logging.info("Episode reward: {}".format(r.episode_rewards[-1]))
+            logging.info("Episode timesteps: {}".format(r.episode_timestep))
+            logging.info("Average of last 500 rewards: {}".format(sum(r.episode_rewards[-500:]) / 500))
+            logging.info("Average of last 100 rewards: {}".format(sum(r.episode_rewards[-100:]) / 100))
+        return True
 
     def isReady(self): #TODO
         return True #TODO if upright, etc.
@@ -120,21 +144,13 @@ class Robot: #agent
             logging.warn("Episode already running!")
             return False
 
-        logging.info("Starting... Will run " + int(episodes) + " time(s)")
-        self.isRunning = True
-        for i in range(1, episodes):
-
-            time.sleep(4) #rest for a few seconds before resetting
-            self.reset() #move back to original position?
-            time.sleep(1) #rest for a second before starting
-
-            timeEpisodeStarted = time.time()
-            while (time.time() - timeEpisodeStarted < episodeDuration):
-                n = 10 #TODO figure out what n should be
-                #a = np.argmax(Q[s,:] + np.random.randn(1, n) * (1. / (i + 1))) #choose action greedily TODO
-
-            logging.info("Finished episode " + i + " with a success rate of ") #TODO print out success
-            i += 1 #add one to i before starting loop over
+        runner.run(
+            timesteps=6000000, #TODO set timesteps
+            episodes=episodes,
+            max_episode_timesteps=10000,
+            deterministic=False,
+            episode_finished=self.episodeFinished
+        )
 
         return True
 
@@ -151,23 +167,6 @@ class Robot: #agent
         logging.info("Stopping forcefully...")
         self.isRunning = False
         return True
-
-    def setAlpha(self, t = 0.0):
-        logging.info("setAlpha") #TODO
-
-    def timeflow(self, t = 0.0): #TODO why timeflow?
-        self.setAlpha(t)
-
-        for i in range(len(self.legs)):
-            Qs = [tf.matmul(self.Q, self.legs[i].joints[0].Q)]
-            for ii in range(1, len(self.legs[i].joints)): #TODO why is the first set manually but all subsequent are appended with a for loop?
-                Qs.append(tf.matmul(Qs[ii-1], self.legs[i].joints[ii].Q))
-
-            
-
-def discount(r, gamma, normal):
-    discount = 0 #placeholder
-    return discount
 
 #Main
 if __name__ == "__main__":
@@ -262,25 +261,6 @@ if __name__ == "__main__":
                     draw.text((0, 38), getProcessorUsage(), font=imageFont, fill="white")
                 time.sleep(5)
 
-    #initialize tf session
-    sess = tf.Session()
-    init = tf.global_variables_initializer()
-    backend.set_session(sess) #Keras
-
-    globalStep = tf.train.get_or_create_global_step()
-    summaryWriter = tf.contrib.summary.create_file_writer('./logs', flush_millis=10000)
-
-    #with Manager() as manager, summaryWriter.as_default(), tf.contrib.summary.always_record_summaries():
-#        tf.contrib.summary.scalar("loss", loss)
-#        train_op = ....
-
     #pool.apply_async(drawDisplay()) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn
-
-#    with tf.Session(...) as sess:
-#       tf.global_variables_initializer().run()
-#       tf.contrib.summary.initialize(graph=tf.get_default_graph())
-    # ...
-#       while not_done_training:
-#            sess.run([train_op, tf.contrib.summary.all_summary_ops()])

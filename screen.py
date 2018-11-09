@@ -12,7 +12,10 @@ import time
 import subprocess #why?
 
 def getIP(): #should I use psutil instead of socket?
-    return "IP: " + socket.gethostbyname(socket.gethostname())
+    cmd = "hostname -I | cut -d\' \' -f1"
+    IP = subprocess.check_output(cmd, shell = True ) #TODO can I do this a better way????
+    cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
+    return "IP: " + str(IP)#socket.gethostbyname(socket.gethostname())
 
 def getStatus():
     return "Status: " + str(True) #TODO #str(r.isRunning)
@@ -67,7 +70,7 @@ def update():
     if os.name == 'posix': #dont run on windows
         while True:
             draw.rectangle((0,0,width,height), outline=0, fill=0) #clear screen
-            
+
             draw.text((x, top), getIP(), font=font, fill="white")
             draw.text((x, top+8), getStatus(), font=font, fill="white") 
             draw.text((x, top+16), getMemoryUsage(), font=font, fill="white")

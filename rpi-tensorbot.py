@@ -246,6 +246,7 @@ if __name__ == "__main__":
     @app.route("/shutdown", methods=['GET', 'POST'])
     def shutdown():
         if os.name == 'posix': #dont run on windows
+            r.stop()
             logging.info("Shutting down...")
             os.system("shutdown -h -t 10")
         else:

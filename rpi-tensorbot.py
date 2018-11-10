@@ -242,7 +242,7 @@ if __name__ == "__main__":
         r.kill()
         return ('', 204)
 
-    @app.route("shutdown", )
+    @app.route("/shutdown", methods=['GET', 'POST'])
     def shutdown():
         logging.info("Shutting down...")
         os.system("shutdown -h -t 10")

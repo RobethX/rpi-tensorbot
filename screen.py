@@ -9,13 +9,13 @@ from PIL import Image, ImageFont, ImageDraw
 import logging
 import time
 
-import subprocess #why?
+import subprocess
 
 def getIP(): #should I use psutil instead of socket?
     cmd = "hostname -I | cut -d\' \' -f1"
     IP = subprocess.check_output(cmd, shell = True ) #TODO can I do this a better way????
     cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
-    return "IP: " + str(IP)#socket.gethostbyname(socket.gethostname())
+    return "IP: " + IP #socket.gethostbyname(socket.gethostname())
 
 def getStatus():
     return "Status: " + str(True) #TODO #str(r.isRunning)

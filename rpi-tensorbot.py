@@ -28,7 +28,7 @@ if os.name == 'posix': #dont run on windows
     from mpu6050 import mpu6050 #apt install python3-smbus
 
 #logging
-logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
+logging.basicConfig(format='%(relativeCreated)6d %(threadName)s %(message)s') #level=logging.DEBUG, 
 #TODO
 
 #learning hyperparameters
@@ -257,7 +257,10 @@ if __name__ == "__main__":
     def status():
         return r.isRunning
 
-    if os.name == 'posix': #dont run on windows
-        pool.apply_async(screen.update) #TODO DOES NOT WORK ON WINDOWS!
-    app.run(host='0.0.0.0') #temporary, use lighttpd
-    #every x seconds check for connection to web server - if not found, stop and warn
+    try:
+        if os.name == 'posix': #dont run on windows
+            pool.apply_async(screen.update) #TODO DOES NOT WORK ON WINDOWS!
+        app.run(host='0.0.0.0') #temporary, use lighttpd
+        #every x seconds check for connection to web server - if not found, stop and warn
+    except KeyboardInterrupt:
+        pass

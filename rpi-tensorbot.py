@@ -248,7 +248,7 @@ if __name__ == "__main__":
         if os.name == 'posix': #dont run on windows
             r.stop()
             logging.info("Shutting down...")
-            os.system("shutdown -h -t 10")
+            os.system("sudo shutdown -h -t 5") #time does not seem to work - should I do shutdown now?
         else:
             logging.info("Not shutting down because the server is not running on a RaspberryPi!")
         return ('', 204)
@@ -263,4 +263,6 @@ if __name__ == "__main__":
         app.run(host='0.0.0.0') #temporary, use lighttpd
         #every x seconds check for connection to web server - if not found, stop and warn
     except KeyboardInterrupt:
+        if os.name == 'posix': #dont run on windows
+            screen.disp.clear() #clear screen so the info does not linger after the script is closed
         pass

@@ -13,8 +13,8 @@ import subprocess
 
 def getIP(): #should I use psutil instead of socket?
     cmd = "hostname -I | cut -d\' \' -f1"
-    IP = subprocess.check_output(cmd, shell = True ).strip() #TODO can I do this a better way????
-    return "IP: " + str(IP) #socket.gethostbyname(socket.gethostname())
+    IP = subprocess.Popen(cmd, shell = True, stdout=subprocess.PIPE).communicate()[0] #TODO can I do this a better way????
+    return "IP: " + IP #socket.gethostbyname(socket.gethostname())
 
 def getStatus():
     return "Status: " + str(True) #TODO #str(r.isRunning)

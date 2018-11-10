@@ -22,9 +22,10 @@ from flask import Flask, render_template, request, Response, send_file
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
 from gpiozero import Motor, LED, PingServer, DistanceSensor
 #import smbus2 #confgure i2c devices
-#from mpu6050 import mpu6050 #apt install python3-smbus
 #TODO use arduino instead of only raspi's GPIO pins (maybe)
-import screen
+if os.name == 'posix': #dont run on windows
+    import screen
+    from mpu6050 import mpu6050 #apt install python3-smbus
 
 #logging
 logging.basicConfig(level=logging.DEBUG, format='%(relativeCreated)6d %(threadName)s %(message)s')
@@ -244,10 +245,18 @@ if __name__ == "__main__":
 
     @app.route("/shutdown", methods=['GET', 'POST'])
     def shutdown():
-        logging.info("Shutting down...")
-        os.system("shutdown -h -t 10")
+        if os.name == 'posix': #dont run on windows
+            logging.info("Shutting down...")
+            os.system("shutdown -h -t 10")
+        else:
+            logging.info("Not shutting down because the server is not running on a RaspberryPi!")
         return ('', 204)
 
-    pool.apply_async(screen.update) #TODO DOES NOT WORK ON WINDOWS!
+    @app.route("/status")
+    def status():
+        return r.isRunning
+
+    if os.name == 'posix': #dont run on windows
+        pool.apply_async(screen.update) #TODO DOES NOT WORK ON WINDOWS!
     app.run(host='0.0.0.0') #temporary, use lighttpd
     #every x seconds check for connection to web server - if not found, stop and warn

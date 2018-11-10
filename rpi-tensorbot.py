@@ -131,8 +131,9 @@ class Robot: #agent
         self.acceleration = Vector3()
         self.rotation = Vector3() #x = roll, y = pitch, z = yaw
 
-        #self.accelerometer = positionSensor.get_accel_data()
-        #self.gyroscope = positionSensor.get_gyro_data()
+        #TODO work out velocity, rotation, and position from acceleration and rotational velocity
+        #self.accelerometer = self.positionSensor.get_accel_data()
+        #self.gyroscope = self.positionSensor.get_gyro_data()
 
         self.isRunning = False      
     #TODO seperate agent and environment functions from robot, do them seperately

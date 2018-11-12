@@ -16,7 +16,9 @@ import numpy as np
 import tensorforce.environments
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
+from tensorforce.contrib.openai_gym import OpenAIGym #DEBUG
 import tensorforce.util
+from gym.envs.mujoco import AntEnv
 from flask import Flask, render_template, request, Response, send_file
 
 os.environ['GPIOZERO_PIN_FACTORY'] = os.environ.get('GPIOZERO_PIN_FACTORY', 'mock')
@@ -72,7 +74,14 @@ class Environment(tensorforce.environments.Environment):
         assert isinstance(env, Environment)
         return env
 
-env = Environment()
+#env = Environment() #TODO finish custom environment
+env = OpenAIGym(
+    gym_id=AntEnv, #OpenAI Gym environment ID.
+    monitor=False, #Output directory, False disables monitoring
+    monitor_safe=False, #Prevents overwriting logs
+    monitor_video=False, #save video every "monitor_video" steps
+    visualize=True #visualize training environment - NOTE: slows down training
+)
 
 #load neural network config
 with open("network.json", "r") as f:

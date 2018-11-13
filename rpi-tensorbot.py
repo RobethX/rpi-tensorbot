@@ -33,18 +33,18 @@ else: #only run on windows
     os.environ["PATH"] = "C:\\Users\\rmchi\\.mujoco\\mjpro150\\bin"
 
 #from gym.envs.mujoco import AntEnv
-from gym.envs.classic_control import MountainCarEnv #TODO temporary!
+from tensorforce.tests.minimal_test import MinimalTest #TODO temporary!
 
 #logging
 logging.basicConfig(format='%(relativeCreated)6d %(threadName)s %(message)s') #level=logging.DEBUG, 
 #TODO
 
 #env = robot.Environment() #TODO finish custom environment
-env = MountainCarEnv() #AntEnv
+env = MinimalTest(specification={'int': ()}) #AntEnv
 
 agent = robot.Actor()
 
-def runEpisode():
+def runEpisode(): #use runner?
     ob = env.reset() #why ob?
     totreward = 0 #what does this mean?
     while True:
@@ -64,8 +64,8 @@ except:
 
 runner = Runner( #use this or runEpisode()?
     agent=agent,
-    environment=env,
-    repeat_actions=1 #what is this???
+    environment=env
+    #repeat_actions=1 #what is this???
 )
 
 #Main

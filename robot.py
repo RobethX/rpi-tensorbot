@@ -1,8 +1,10 @@
 import time
 import numpy as np
 import tensorforce.environments
-from tensorforce.agents import PPOAgent
+#from tensorforce.agents import PPOAgent
 import logging
+
+logging.basicConfig(format='%(relativeCreated)6d %(threadName)s %(message)s', level=logging.INFO) # #TODO should I have a header type file for stuff like this?
 
 #A Vector3 class for Python
 class Vector3:
@@ -85,6 +87,7 @@ class Robot: #agent
             logging.warn("Episode already running!")
             return False
 
+        logging.info("Starting (well, not really)")
         #runner.run(
         #    timesteps=6000000, #TODO set timesteps
         #    episodes=episodes,
@@ -159,18 +162,18 @@ class Actor:
 
         preprocessingConfig = None #what is this
 
-        self.agent = PPOAgent(
-            states=dict(type='float', shape=(12+9,)), #why define the shape?
-            actions=actions,
-            batching_capacity=1000,
-            network=networkSpec,
-            states_preprocessing=preprocessingConfig,
-            actions_exploration=actionsExploration,
-            step_optimizer=dict(
-                type="adam",
-                learning_rate=1e-5 #alpha
-            ),
-        )
+        #self.agent = PPOAgent(
+        #    states=dict(type='float', shape=(12+9,)), #why define the shape?
+        #    actions=actions,
+        #    batching_capacity=1000,
+        #    network=networkSpec,
+        #    states_preprocessing=preprocessingConfig,
+        #    actions_exploration=actionsExploration,
+        #    step_optimizer=dict(
+        #        type="adam",
+        #        learning_rate=1e-5 #alpha
+        #    ),
+        #)
 
     def act(self, state): #TODO
         jp = np.expand_dims( np.nan_to_num( np.array(state["JointPosition"] ) ),axis=0)

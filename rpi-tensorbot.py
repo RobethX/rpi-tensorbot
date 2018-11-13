@@ -13,11 +13,7 @@ from multiprocessing import Process, Pool, Manager, Value
 import logging
 import json
 import numpy as np
-import tensorflow as tf
-from tensorforce.agents import Agent
-from tensorforce.execution import Runner
-from tensorforce.contrib.openai_gym import OpenAIGym #DEBUG
-import tensorforce.util
+#import tensorflow as tf
 import gc
 from flask import Flask, render_template, request, Response, send_file
 import robot
@@ -29,27 +25,23 @@ from gpiozero import Motor, LED, PingServer, DistanceSensor
 if os.name == 'posix': #dont run on windows
     import screen
     from mpu6050 import mpu6050 #apt install python3-smbus
-else: #only run on windows
-    os.environ["PATH"] = "C:\\Users\\rmchi\\.mujoco\\mjpro150\\bin"
+#else: #only run on windows
+    #os.environ["PATH"] = "C:\\Users\\rmchi\\.mujoco\\mjpro150\\bin"
 
 #from gym.envs.mujoco import AntEnv
-from tensorforce.tests.minimal_test import MinimalTest #TODO temporary!
-
 #logging
 logging.basicConfig(format='%(relativeCreated)6d %(threadName)s %(message)s') #level=logging.DEBUG, 
 #TODO
 
-#env = robot.Environment() #TODO finish custom environment
-env = MinimalTest(specification={'int': ()}) #AntEnv
-
+env = robot.Environment() #TODO finish custom environment
 agent = robot.Actor()
 
-def runEpisode(): #use runner?
+def runEpisode(): #use runner? #TODO this is a placeholder
     ob = env.reset() #why ob?
     totreward = 0 #what does this mean?
     while True:
         action = agent.act(ob)
-        ob, reward, done, _ = env.step(action) #what is _?
+        #ob, reward, done, _ = env.step(action) #what is _? 
         totreward = totreward + reward
         agent.observe(reward=np.nan_to_num(reward), terminal=done)
         time.sleep(0.1) #pause
@@ -57,19 +49,13 @@ def runEpisode(): #use runner?
             gc.collect()
             return totreward #return last reward
 
-try: #try loading previous session data
-    agent.restore("./data/") #what should I call this?
-except:
-    logging.info("No previous data found. Starting fresh.")
-
-runner = Runner( #use this or runEpisode()?
-    agent=agent,
-    environment=env
-    #repeat_actions=1 #what is this???
-)
-
 #Main
 if __name__ == "__main__":
+    try: #try loading previous session data
+        agent.restore("./data/") #what should I call this?
+    except:
+        logging.info("No previous data found. Starting fresh.")
+
     pool = Pool() #how many processes?
     
     r = robot.Robot()

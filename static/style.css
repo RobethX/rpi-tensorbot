@@ -10,7 +10,7 @@ head {
 }
 
 body {
-    font-family: "helvetica";
+    font-family: Helvetica, sans-serif;
     font-size: 100%; 
     text-decoration: none;
     color: #F2F1EF;

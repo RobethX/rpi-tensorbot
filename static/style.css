@@ -40,5 +40,5 @@ body {
 .main {
 	display: inline-block;
 	white-space: nowrap;
-	margin: 2em;
+	margin: 2em, auto;
 }
